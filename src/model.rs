@@ -7,9 +7,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub(crate) struct QueryResult {
 	#[serde(rename = "Results")]
-	pub results: Vec<Torrent>,
-	#[serde(rename = "Indexers")]
-	indexers: Vec<Indexer>
+	pub results: Vec<Torrent>
 }
 
 #[derive(Debug, Deserialize)]
@@ -59,16 +57,5 @@ impl TryFrom<Torrent> for torrent_common::Torrent {
             this.minimum_seed_time.map(Duration::from_secs)
         )
     }
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub(crate) struct Indexer {
-	#[serde(rename = "ID")]
-	id: String,
-	name: String,
-	status: u8,
-	results: u16,
-	error: Option<String>
 }
 
