@@ -76,6 +76,7 @@ impl Client {
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn search(&self, query: &str, categories: Option<&[&str]>) -> Result<Vec<Torrent>, Error> {
 		if let Some(categories) = categories {
 			let categories = categories.iter().copied().map(urlencoding::encode).collect::<Vec<_>>();
@@ -86,6 +87,7 @@ impl Client {
 	}
 
 	#[cfg(feature = "require-parse-names")]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn search(&self, query: &str, categories: Option<&[&str]>) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		if let Some(categories) = categories {
 			let categories = categories.iter().copied().map(urlencoding::encode).collect::<Vec<_>>();
@@ -96,31 +98,37 @@ impl Client {
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
 		self.get(query, Some(&MOVIE_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		self.get(query, Some(&MOVIE_CATEGORIES)).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
 		self.get(query, Some(&TV_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		self.get(query, Some(&TV_CATEGORIES)).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
 		self.get(query, Some(&AUDIO_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
+	#[instrument(err, level = "info", skip(self))]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		self.get(query, Some(&AUDIO_CATEGORIES)).await
 	}
