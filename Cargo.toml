@@ -1,0 +1,29 @@
+[package]
+name = "jackett-async"
+version = "0.1.0"
+authors = ["Mike Cronce <mike@quadra-tec.net>"]
+edition = "2018"
+license = "MIT"
+repository = "https://gitlab.cronce.io/foss/jackett-async"
+categories = ["api-bindings"]
+keywords = ["torrent", "bittorrent"]
+description = "An async client for Jackett"
+
+[features]
+parse-names = ["torrent-common/parse-names"]
+require-parse-names = ["torrent-common/require-parse-names"]
+
+[dependencies]
+itertools = "0.10.3"
+reqwest = {version = "0.11", default_features = false, features = ["gzip", "json", "rustls-tls"]}
+serde = {version = "1", features = ["derive"]}
+thiserror = "1"
+torrent-common = "0.1.2"
+tracing = "0.1"
+tracing-futures = "0.2"
+urlencoding = "1"
+
+[dev-dependencies]
+serde_json = "1"
+torrent-name-parser = "0.9"
+
