@@ -97,32 +97,32 @@ impl Client {
 
 	#[cfg(not(feature = "require-parse-names"))]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
-		self.search(query, Some(&MOVIE_CATEGORIES)).await
+		self.get(query, Some(&MOVIE_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.search(query, Some(&MOVIE_CATEGORIES)).await
+		self.get(query, Some(&MOVIE_CATEGORIES)).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
-		self.search(query, Some(&TV_CATEGORIES)).await
+		self.get(query, Some(&TV_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.search(query, Some(&TV_CATEGORIES)).await
+		self.get(query, Some(&TV_CATEGORIES)).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
-		self.search(query, Some(&AUDIO_CATEGORIES)).await
+		self.get(query, Some(&AUDIO_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.search(query, Some(&AUDIO_CATEGORIES)).await
+		self.get(query, Some(&AUDIO_CATEGORIES)).await
 	}
 }
 
