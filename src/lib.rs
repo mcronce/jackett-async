@@ -11,6 +11,10 @@ pub use error::Error;
 mod model;
 use model::QueryResult;
 
+#[cfg(any(feature = "parse-names", feature = "require-parse-names"))]
+/// Re-exported from [`torrent-common`](torrent_common::Metadata)
+pub use torrent_common::Metadata;
+
 #[cfg(feature = "require-parse-names")]
 /// Re-exported from [`torrent-common`](torrent_common::ParseError)
 pub use torrent_common::ParseError;
