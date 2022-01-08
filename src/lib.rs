@@ -14,6 +14,18 @@ use model::QueryResult;
 #[cfg(any(feature = "parse-names", feature = "require-parse-names"))]
 /// Re-exported from [`torrent-common`](torrent_common::Metadata)
 pub use torrent_common::Metadata;
+#[cfg(any(feature = "parse-names", feature = "require-parse-names"))]
+/// Re-exported from [`torrent-common`](torrent_common::Resolution)
+pub use torrent_common::Resolution;
+#[cfg(any(feature = "parse-names", feature = "require-parse-names"))]
+/// Re-exported from [`torrent-common`](torrent_common::Quality)
+pub use torrent_common::Quality;
+#[cfg(any(feature = "parse-names", feature = "require-parse-names"))]
+/// Re-exported from [`torrent-common`](torrent_common::Codec)
+pub use torrent_common::Codec;
+#[cfg(any(feature = "parse-names", feature = "require-parse-names"))]
+/// Re-exported from [`torrent-common`](torrent_common::Audio)
+pub use torrent_common::Audio;
 
 #[cfg(feature = "require-parse-names")]
 /// Re-exported from [`torrent-common`](torrent_common::ParseError)
