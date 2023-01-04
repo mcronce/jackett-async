@@ -28,6 +28,7 @@ pub(crate) struct Torrent {
 
 #[cfg(not(feature = "require-parse-names"))]
 impl From<Torrent> for torrent_common::Torrent {
+    #[inline]
     fn from(this: Torrent) -> Self {
         torrent_common::Torrent::new(
             this.name,
@@ -45,6 +46,7 @@ impl From<Torrent> for torrent_common::Torrent {
 #[cfg(feature = "require-parse-names")]
 impl TryFrom<Torrent> for torrent_common::Torrent {
     type Error = crate::ParseError;
+    #[inline]
     fn try_from(this: Torrent) -> Result<Self, Self::Error> {
         torrent_common::Torrent::new(
             this.name,

@@ -46,10 +46,12 @@ pub struct Client {
 	apikey: String
 }
 
+#[inline]
 fn category_parameters(categories: &[&str]) -> String {
 	std::iter::repeat("&Category[]=").interleave_shortest(categories.iter().copied()).collect()
 }
 
+#[inline]
 fn build_url(base_url: &str, apikey: &str, query: &str, categories: Option<&[&str]>) -> String {
 	format!(
 		"{}?apikey={}&Query={}{}",
@@ -74,6 +76,7 @@ impl Client {
 	}
 
 	#[instrument(err, level = "debug", skip(self))]
+	#[inline]
 	async fn _get(&self, query: &str, categories: Option<&[&str]>) -> Result<reqwest::Response, reqwest::Error> {
 		let url = build_url(&self.base_url, &self.apikey, query, categories);
 		self.http.get(&url).send().await?.error_for_status()
@@ -81,6 +84,7 @@ impl Client {
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "debug", skip(self))]
+	#[inline]
 	async fn get(&self, query: &str, categories: Option<&[&str]>) -> Result<Vec<Torrent>, Error> {
 		let response = self._get(query, categories).await?;
 		Ok(response.json::<QueryResult>().await?.results.into_iter().map(Torrent::from).collect())
@@ -88,12 +92,14 @@ impl Client {
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "debug", skip(self))]
+	#[inline]
 	async fn get(&self, query: &str, categories: Option<&[&str]>) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		Ok(self._get(query, categories).await?.json::<QueryResult>().await?.results.into_iter().map(Torrent::try_from).collect())
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn search(&self, query: &str, categories: Option<&[&str]>) -> Result<Vec<Torrent>, Error> {
 		if let Some(categories) = categories {
 			let categories = categories.iter().copied().map(urlencoding::encode).collect::<Vec<_>>();
@@ -105,6 +111,7 @@ impl Client {
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn search(&self, query: &str, categories: Option<&[&str]>) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		if let Some(categories) = categories {
 			let categories = categories.iter().copied().map(urlencoding::encode).collect::<Vec<_>>();
@@ -116,36 +123,42 @@ impl Client {
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
 		self.get(query, Some(&MOVIE_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		self.get(query, Some(&MOVIE_CATEGORIES)).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
 		self.get(query, Some(&TV_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		self.get(query, Some(&TV_CATEGORIES)).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
 		self.get(query, Some(&AUDIO_CATEGORIES)).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
+	#[inline]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		self.get(query, Some(&AUDIO_CATEGORIES)).await
 	}
