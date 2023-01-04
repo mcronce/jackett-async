@@ -1,4 +1,5 @@
 #![allow(unused_parens)]
+#![warn(clippy::future_not_send)]
 
 #[cfg(feature = "require-parse-names")]
 use std::convert::TryFrom;
