@@ -4,6 +4,7 @@
 #[cfg(feature = "require-parse-names")]
 use std::convert::TryFrom;
 
+use constcat::concat;
 use tracing::instrument;
 
 mod error;
@@ -34,9 +35,10 @@ pub use torrent_common::ParseError;
 /// Re-exported from [`torrent-common`](torrent_common::Torrent)
 pub use torrent_common::Torrent;
 
-static MOVIE_CATEGORIES: [&str; 9] = ["2000", "2010", "2030", "2040", "2045", "2050", "2060", "2070", "2080"];
-static TV_CATEGORIES: [&str; 8] = ["5000", "5010", "5020", "5030", "5040", "5060", "5070", "5080"];
-static AUDIO_CATEGORIES: [&str; 6] = ["3000", "3010", "3020", "3030", "3040", "3050"];
+const MOVIE_CATEGORIES: [&str; 9] = ["2000", "2010", "2030", "2040", "2045", "2050", "2060", "2070", "2080"];
+const TV_CATEGORIES: [&str; 8] = ["5000", "5010", "5020", "5030", "5040", "5060", "5070", "5080"];
+const AUDIO_CATEGORIES: [&str; 6] = ["3000", "3010", "3020", "3030", "3040", "3050"];
+const CATEGORY_GLUE: &str = "&Category[]=";
 
 #[derive(Clone)]
 pub struct Client {
@@ -44,6 +46,48 @@ pub struct Client {
 	base_url: String,
 	apikey: String
 }
+
+const fn movie_categories() -> &'static str /* {{{ */ {
+	concat!(
+		CATEGORY_GLUE, MOVIE_CATEGORIES[0],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[1],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[2],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[3],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[4],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[5],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[6],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[7],
+		CATEGORY_GLUE, MOVIE_CATEGORIES[8]
+	)
+} // }}}
+
+const fn tv_categories() -> &'static str /* {{{ */ {
+	concat!(
+		CATEGORY_GLUE, TV_CATEGORIES[0],
+		CATEGORY_GLUE, TV_CATEGORIES[1],
+		CATEGORY_GLUE, TV_CATEGORIES[2],
+		CATEGORY_GLUE, TV_CATEGORIES[3],
+		CATEGORY_GLUE, TV_CATEGORIES[4],
+		CATEGORY_GLUE, TV_CATEGORIES[5],
+		CATEGORY_GLUE, TV_CATEGORIES[6],
+		CATEGORY_GLUE, TV_CATEGORIES[7]
+	)
+} // }}}
+
+const fn audio_categories() -> &'static str /* {{{ */ {
+	concat!(
+		CATEGORY_GLUE, AUDIO_CATEGORIES[0],
+		CATEGORY_GLUE, AUDIO_CATEGORIES[1],
+		CATEGORY_GLUE, AUDIO_CATEGORIES[2],
+		CATEGORY_GLUE, AUDIO_CATEGORIES[3],
+		CATEGORY_GLUE, AUDIO_CATEGORIES[4],
+		CATEGORY_GLUE, AUDIO_CATEGORIES[5]
+	)
+} // }}}
+
+static MOVIE_CATEGORY_STR: &str = movie_categories();
+static TV_CATEGORY_STR: &str = tv_categories();
+static AUDIO_CATEGORY_STR: &str = audio_categories();
 
 #[inline]
 fn category_parameters<S: AsRef<str>>(categories: impl Iterator<Item = S> + Send) -> String {
@@ -56,14 +100,22 @@ fn category_parameters<S: AsRef<str>>(categories: impl Iterator<Item = S> + Send
 	s
 }
 
+/*
 #[inline]
-fn build_url<S: AsRef<str>>(base_url: &str, apikey: &str, query: &str, categories: Option<impl Iterator<Item = S> + Send>) -> String {
+fn category_parameters<'a>(categories: impl Iterator<Item = &'a str> + Send) -> String {
+	static GLUE: &str = "&Category[]=";
+	categories.interleave(std::iter::repeat(GLUE)).collect()
+}
+*/
+
+#[inline]
+pub fn build_url(base_url: &str, apikey: &str, query: &str, categories: &str) -> String {
 	format!(
 		"{}?apikey={}&Query={}{}",
 		base_url,
 		apikey,
 		urlencoding::encode(query),
-		categories.map(category_parameters).unwrap_or_default()
+		categories
 	)
 }
 
@@ -82,7 +134,7 @@ impl Client {
 
 	#[instrument(err, level = "debug", skip(self, categories))]
 	#[inline]
-	async fn _get<S: AsRef<str>>(&self, query: &str, categories: Option<impl Iterator<Item = S> + Send>) -> Result<reqwest::Response, reqwest::Error> {
+	async fn _get(&self, query: &str, categories: &str) -> Result<reqwest::Response, reqwest::Error> {
 		let url = build_url(&self.base_url, &self.apikey, query, categories);
 		self.http.get(&url).send().await?.error_for_status()
 	}
@@ -90,7 +142,7 @@ impl Client {
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "debug", skip(self, categories))]
 	#[inline]
-	async fn get<S: AsRef<str>>(&self, query: &str, categories: Option<impl Iterator<Item = S> + Send>) -> Result<Vec<Torrent>, Error> {
+	async fn get(&self, query: &str, categories: &str) -> Result<Vec<Torrent>, Error> {
 		let response = self._get(query, categories).await?;
 		Ok(response.json::<QueryResult>().await?.results.into_iter().map(Torrent::from).collect())
 	}
@@ -98,7 +150,7 @@ impl Client {
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "debug", skip(self, categories))]
 	#[inline]
-	async fn get<S: AsRef<str>>(&self, query: &str, categories: Option<impl Iterator<Item = S> + Send>) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
+	async fn get(&self, query: &str, categories: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
 		Ok(self._get(query, categories).await?.json::<QueryResult>().await?.results.into_iter().map(Torrent::try_from).collect())
 	}
 
@@ -106,56 +158,62 @@ impl Client {
 	#[instrument(err, level = "info", skip(self, categories))]
 	#[inline]
 	pub async fn search<'cat>(&self, query: &str, categories: Option<impl Iterator<Item = &'cat str> + Send>) -> Result<Vec<Torrent>, Error> {
-		self.get(query, categories.map(|cat| cat.map(urlencoding::encode))).await
+		let categories = categories
+			.map(|cat| cat.map(urlencoding::encode))
+			.map(category_parameters);
+		self.get(query, categories.as_deref().unwrap_or("")).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self, categories))]
 	#[inline]
 	pub async fn search<'cat>(&self, query: &str, categories: Option<impl Iterator<Item = &'cat str> + Send>) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.get(query, categories.map(|cat| cat.map(urlencoding::encode))).await
+		let categories = categories
+			.map(|cat| cat.map(urlencoding::encode))
+			.map(category_parameters);
+		self.get(query, categories.as_deref().unwrap_or("")).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
 	#[inline]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
-		self.get(query, Some(MOVIE_CATEGORIES.into_iter())).await
+		self.get(query, MOVIE_CATEGORY_STR).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
 	#[inline]
 	pub async fn movie_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.get(query, Some(MOVIE_CATEGORIES.into_iter())).await
+		self.get(query, MOVIE_CATEGORY_STR).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
 	#[inline]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
-		self.get(query, Some(TV_CATEGORIES.into_iter())).await
+		self.get(query, TV_CATEGORY_STR).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
 	#[inline]
 	pub async fn tv_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.get(query, Some(TV_CATEGORIES.into_iter())).await
+		self.get(query, TV_CATEGORY_STR).await
 	}
 
 	#[cfg(not(feature = "require-parse-names"))]
 	#[instrument(err, level = "info", skip(self))]
 	#[inline]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Torrent>, Error> {
-		self.get(query, Some(AUDIO_CATEGORIES.into_iter())).await
+		self.get(query, AUDIO_CATEGORY_STR).await
 	}
 
 	#[cfg(feature = "require-parse-names")]
 	#[instrument(err, level = "info", skip(self))]
 	#[inline]
 	pub async fn audio_search(&self, query: &str) -> Result<Vec<Result<Torrent, ParseError>>, Error> {
-		self.get(query, Some(AUDIO_CATEGORIES.into_iter())).await
+		self.get(query, AUDIO_CATEGORY_STR).await
 	}
 }
 
