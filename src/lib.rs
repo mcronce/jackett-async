@@ -120,14 +120,14 @@ fn build_url(base_url: &str, apikey: &str, query: &str, categories: &str) -> Str
 }
 
 impl Client {
-	#[instrument(err, level = "info", skip(base_url, apikey), fields(base_url = %base_url.to_string(), apikey = %apikey.to_string()))]
-	pub fn new(base_url: impl ToString, apikey: impl ToString) -> Result<Self, reqwest::Error> {
+	#[instrument(err, level = "info", skip(base_url, apikey), fields(ase_url, apikey))]
+	pub fn new(base_url: String, apikey: String) -> Result<Self, reqwest::Error> {
 		let this = Self{
 			http: reqwest::Client::builder()
 				.gzip(true)
 				.build()?,
-			base_url: base_url.to_string(),
-			apikey: apikey.to_string()
+			base_url,
+			apikey
 		};
 		Ok(this)
 	}
