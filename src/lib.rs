@@ -109,7 +109,7 @@ fn category_parameters<'a>(categories: impl Iterator<Item = &'a str> + Send) -> 
 */
 
 #[inline]
-pub fn build_url(base_url: &str, apikey: &str, query: &str, categories: &str) -> String {
+fn build_url(base_url: &str, apikey: &str, query: &str, categories: &str) -> String {
 	format!(
 		"{}?apikey={}&Query={}{}",
 		base_url,
